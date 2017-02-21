@@ -22,6 +22,7 @@ from collections import defaultdict, Counter
 
 from datetime import datetime
 
+import errno
 import getpass
 import logging
 import socket
@@ -1374,6 +1375,8 @@ class SchedulerJob(BaseJob):
         last_stat_print_time = datetime(2000, 1, 1)
         # Last time that self.heartbeat() was called.
         last_self_heartbeat_time = datetime.now()
+        # Last time that self.executor.heartbeat() was called.
+        last_executor_heartbeat_time = datetime.now()
         # Last time that the DAG dir was traversed to look for files
         last_dag_dir_refresh_time = datetime.now()
 
@@ -1439,9 +1442,16 @@ class SchedulerJob(BaseJob):
                 self._execute_task_instances(simple_dag_bag,
                                              (State.SCHEDULED,))
 
-            # Call hearbeats
-            self.logger.info("Heartbeating the executor")
-            self.executor.heartbeat()
+            # Heartbeat the executor periodically
+            time_since_last_heartbeat = (datetime.now() -
+                                         last_executor_heartbeat_time).total_seconds()
+            if time_since_last_heartbeat > self.heartrate:
+                self.logger.info("Heartbeating the executor")
+                try: self.executor.heartbeat()
+                except socket.error as socket_error: # RabbitMQ sometimes resets the socket connection
+                    if socket_error.errno != errno.ECONNRESET:
+                        raise
+                last_executor_heartbeat_time = datetime.now()
 
             # Process events from the executor
             self._process_executor_events()
