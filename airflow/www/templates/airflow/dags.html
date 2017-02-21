@@ -119,7 +119,7 @@
 
                 <!-- Trigger Dag -->
                 <a href="{{ url_for('airflow.trigger', dag_id=dag.dag_id) }}"
-                   onclick="return confirmTriggerDag('{{ dag.safe_dag_id }}')" title="Trigger Dag">
+                   onclick="return confirmTriggerDag('{{ dag.safe_dag_id }}', this)" title="Trigger Dag">
                     <span class="glyphicon glyphicon-play-circle" aria-hidden="true"></span>
                 </a>
 
@@ -189,8 +189,28 @@
   <script src="{{ url_for('static', filename='bootstrap-toggle.min.js') }}"></script>
   <script>
 
-      function confirmTriggerDag(dag_id){
-          return confirm("Are you sure you want to run '"+dag_id+"' now?");
+      function confirmTriggerDag(dag_id, anchor_tag){
+          if(confirm("Are you sure you want to run '"+dag_id+"' now?")) {
+              var payload = prompt('Please provide JSON config to pass to DAG:', '{}');
+              if (payload === null) {
+                  return false;
+              }
+              try {
+                  JSON.parse(payload);
+              } catch (e) {
+                  console.error('unable to parse JSON: ', e);
+                  alert('Malformed JSON provided. Please check your input and try again.');
+                  return false;
+              }
+              var parameters = $.param({
+                  payload: payload
+              });
+              if (parameters && parameters.length) {
+                  anchor_tag.href += '&' + parameters;
+              }
+              return true;
+          }
+          return false;
       }
       all_dags = $("[id^=toggle]");
       $.each(all_dags, function(i,v) {

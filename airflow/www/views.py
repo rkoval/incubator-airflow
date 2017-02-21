@@ -1000,6 +1000,9 @@ class Airflow(BaseView):
             return redirect(origin)
 
         run_conf = {}
+        payload = request.args.get('payload')
+        if payload:
+            run_conf['payload'] = json.dumps(json.loads(payload)) # validate json structure
 
         dag.create_dagrun(
             run_id=run_id,
