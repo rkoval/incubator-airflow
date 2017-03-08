@@ -3378,6 +3378,7 @@ class DAG(BaseDag, LoggingMixin):
             ignore_task_deps=False,
             ignore_first_depends_on_past=False,
             raw=False,
+            conf=None,
             pool=None):
         """
         Runs the DAG.
@@ -3398,6 +3399,7 @@ class DAG(BaseDag, LoggingMixin):
             ignore_task_deps=ignore_task_deps,
             ignore_first_depends_on_past=ignore_first_depends_on_past,
             raw=raw,
+            dag_run_conf=conf,
             pool=pool)
         job.run()
 

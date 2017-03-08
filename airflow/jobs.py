@@ -1663,6 +1663,7 @@ class BackfillJob(BaseJob):
             ignore_first_depends_on_past=False,
             ignore_task_deps=False,
             raw=False,
+            dag_run_conf=None,
             pool=None,
             *args, **kwargs):
         self.dag = dag
@@ -1675,6 +1676,7 @@ class BackfillJob(BaseJob):
         self.ignore_first_depends_on_past = ignore_first_depends_on_past
         self.ignore_task_deps = ignore_task_deps
         self.raw = raw
+        self.dag_run_conf = dag_run_conf
         self.pool = pool
         super(BackfillJob, self).__init__(*args, **kwargs)
 
@@ -1812,6 +1814,7 @@ class BackfillJob(BaseJob):
                     state=State.RUNNING,
                     external_trigger=False,
                     session=session,
+                    conf=self.dag_run_conf,
                 )
             else:
                 run = run[0]
