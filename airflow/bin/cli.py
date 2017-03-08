@@ -339,6 +339,7 @@ def run(args, dag=None):
         settings.configure_orm()
 
     logging.root.handlers = []
+    filename = None
     if args.raw:
         # Output to STDOUT for the parent process to read and log
         logging.basicConfig(
@@ -401,7 +402,10 @@ def run(args, dag=None):
     ti.refresh_from_db()
 
     if args.local:
-        print("Logging into: " + filename)
+        if filename:
+            logging.info("Logging into: " + filename)
+        else:
+            logging.info('Logging into: stdout')
         run_job = jobs.LocalTaskJob(
             task_instance=ti,
             mark_success=args.mark_success,
@@ -478,7 +482,7 @@ def run(args, dag=None):
             DeprecationWarning)
         remote_base = conf.get('core', 'S3_LOG_FOLDER')
 
-    if os.path.exists(filename):
+    if filename and os.path.exists(filename):
         # read log and remove old logs to get just the latest additions
 
         with open(filename, 'r') as logfile:

@@ -3377,6 +3377,7 @@ class DAG(BaseDag, LoggingMixin):
             donot_pickle=configuration.getboolean('core', 'donot_pickle'),
             ignore_task_deps=False,
             ignore_first_depends_on_past=False,
+            raw=False,
             pool=None):
         """
         Runs the DAG.
@@ -3396,6 +3397,7 @@ class DAG(BaseDag, LoggingMixin):
             donot_pickle=donot_pickle,
             ignore_task_deps=ignore_task_deps,
             ignore_first_depends_on_past=ignore_first_depends_on_past,
+            raw=raw,
             pool=pool)
         job.run()
 

@@ -1662,6 +1662,7 @@ class BackfillJob(BaseJob):
             donot_pickle=False,
             ignore_first_depends_on_past=False,
             ignore_task_deps=False,
+            raw=False,
             pool=None,
             *args, **kwargs):
         self.dag = dag
@@ -1673,6 +1674,7 @@ class BackfillJob(BaseJob):
         self.donot_pickle = donot_pickle
         self.ignore_first_depends_on_past = ignore_first_depends_on_past
         self.ignore_task_deps = ignore_task_deps
+        self.raw = raw
         self.pool = pool
         super(BackfillJob, self).__init__(*args, **kwargs)
 
@@ -1929,6 +1931,7 @@ class BackfillJob(BaseJob):
                                 pickle_id=pickle_id,
                                 ignore_task_deps=self.ignore_task_deps,
                                 ignore_depends_on_past=ignore_depends_on_past,
+                                raw=self.raw,
                                 pool=self.pool)
                             started[key] = ti
                             tasks_to_run.pop(key)
