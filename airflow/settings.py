@@ -73,14 +73,44 @@ LOGGING_LEVEL = logging.INFO
 # the prefix to append to gunicorn worker processes after init
 GUNICORN_WORKER_READY_PREFIX = "[ready] "
 
+BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
+
+RESET_SEQ = "\033[0m"
+COLOR_SEQ = "\033[1;%dm"
+
+class ColoredFormatter(logging.Formatter):
+
+    COLORS = {
+        'WARNING': YELLOW,
+        'INFO': WHITE,
+        'DEBUG': CYAN,
+        'CRITICAL': MAGENTA,
+        'ERROR': RED
+    }
+
+    def __init__(self, msg, use_color = True):
+        logging.Formatter.__init__(self, msg)
+        self.use_color = use_color
+
+    def format(self, record):
+        levelname = record.levelname
+        if self.use_color and levelname in self.COLORS:
+            levelname_color = COLOR_SEQ % (30 + self.COLORS[levelname]) + levelname + RESET_SEQ
+            record.levelname = levelname_color
+        return logging.Formatter.format(self, record)
+
 # can't move this to conf due to ConfigParser interpolation
 LOG_FORMAT = (
     '[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s')
+LOG_FORMAT_WITH_COLOR = (
+    '[%(asctime)s] ' + COLOR_SEQ % (30 + BLACK) + '{%(filename)s:%(lineno)d}' + RESET_SEQ + ' %(levelname)s - %(message)s')
 LOG_FORMAT_WITH_PID = (
     '[%(asctime)s] [%(process)d] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s')
 LOG_FORMAT_WITH_THREAD_NAME = (
     '[%(asctime)s] {%(filename)s:%(lineno)d} %(threadName)s %(levelname)s - %(message)s')
 SIMPLE_LOG_FORMAT = '%(asctime)s %(levelname)s - %(message)s'
+
+DEFAULT_COLOR_FORMATTER = ColoredFormatter(LOG_FORMAT_WITH_COLOR)
 
 AIRFLOW_HOME = None
 SQL_ALCHEMY_CONN = None
@@ -121,7 +151,9 @@ def configure_logging(log_format=LOG_FORMAT):
 
     def _configure_logging(logging_level):
         global LOGGING_LEVEL
-        logging.root.handlers = []
+        console = logging.StreamHandler()
+        console.setFormatter(ColoredFormatter(log_format))
+        logging.root.handlers = [console]
         logging.basicConfig(
             format=log_format, stream=sys.stdout, level=logging_level)
         LOGGING_LEVEL = logging_level

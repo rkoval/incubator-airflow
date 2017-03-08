@@ -344,7 +344,7 @@ def run(args, dag=None):
         logging.basicConfig(
             stream=sys.stdout,
             level=settings.LOGGING_LEVEL,
-            format=settings.LOG_FORMAT)
+            format=settings.LOG_FORMAT_WITH_COLOR)
     else:
         # Setting up logging to a file.
 
@@ -382,7 +382,8 @@ def run(args, dag=None):
         logging.basicConfig(
             filename=filename,
             level=settings.LOGGING_LEVEL,
-            format=settings.LOG_FORMAT)
+            format=settings.LOG_FORMAT_WITH_COLOR)
+    logging.root.handlers[0].setFormatter(settings.DEFAULT_COLOR_FORMATTER)
 
     if not args.pickle and not dag:
         dag = get_dag(args)
