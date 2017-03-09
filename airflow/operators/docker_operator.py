@@ -14,6 +14,7 @@
 
 import json
 import logging
+from sys import platform
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
@@ -157,7 +158,11 @@ class DockerOperator(BaseOperator):
 
         cpu_shares = int(round(self.cpus * 1024))
 
-        with TemporaryDirectory(prefix='airflowtmp') as host_tmp_dir:
+        base_tmp_dir = None
+        if platform == "darwin":
+            base_tmp_dir = '/tmp'
+
+        with TemporaryDirectory(prefix='airflowtmp', dir=base_tmp_dir) as host_tmp_dir:
             self.environment['AIRFLOW_TMP_DIR'] = self.tmp_dir
             self.volumes.append('{0}:{1}'.format(host_tmp_dir, self.tmp_dir))
 
