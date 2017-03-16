@@ -153,8 +153,14 @@ class DockerOperator(BaseOperator):
         if self.force_pull or len(self.cli.images(name=image)) == 0:
             logging.info('Pulling docker image ' + image)
             for l in self.cli.pull(image, stream=True):
-                output = json.loads(l.decode('utf-8'))
-                logging.info("{}".format(output['status']))
+                for line in l.splitlines():
+                    output = json.loads(line.decode('utf-8').strip())
+                    if 'progress' in output and 'id' in output:
+                        msg = "{} for {}: {}".format(output['status'], output['id'], output['progress'])
+                    else:
+                        msg = "{}".format(output['status'])
+
+                    logging.info(msg)
 
         cpu_shares = int(round(self.cpus * 1024))
 
