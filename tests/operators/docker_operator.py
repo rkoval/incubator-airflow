@@ -17,7 +17,7 @@ import logging
 
 try:
     from airflow.operators.docker_operator import DockerOperator
-    from docker.client import Client
+    from docker import APIClient
 except ImportError:
     pass
 
@@ -35,12 +35,12 @@ except ImportError:
 class DockerOperatorTestCase(unittest.TestCase):
     @unittest.skipIf(mock is None, 'mock package not present')
     @mock.patch('airflow.utils.file.mkdtemp')
-    @mock.patch('airflow.operators.docker_operator.Client')
+    @mock.patch('airflow.operators.docker_operator.APIClient')
     def test_execute(self, client_class_mock, mkdtemp_mock):
         host_config = mock.Mock()
         mkdtemp_mock.return_value = '/mkdtemp'
 
-        client_mock = mock.Mock(spec=Client)
+        client_mock = mock.Mock(spec=APIClient)
         client_mock.create_container.return_value = {'Id': 'some_id'}
         client_mock.create_host_config.return_value = host_config
         client_mock.images.return_value = []
@@ -76,9 +76,9 @@ class DockerOperatorTestCase(unittest.TestCase):
 
     @unittest.skipIf(mock is None, 'mock package not present')
     @mock.patch('airflow.operators.docker_operator.tls.TLSConfig')
-    @mock.patch('airflow.operators.docker_operator.Client')
+    @mock.patch('airflow.operators.docker_operator.APIClient')
     def test_execute_tls(self, client_class_mock, tls_class_mock):
-        client_mock = mock.Mock(spec=Client)
+        client_mock = mock.Mock(spec=APIClient)
         client_mock.create_container.return_value = {'Id': 'some_id'}
         client_mock.create_host_config.return_value = mock.Mock()
         client_mock.images.return_value = []
@@ -103,7 +103,7 @@ class DockerOperatorTestCase(unittest.TestCase):
                                              version=None)
 
     @unittest.skipIf(mock is None, 'mock package not present')
-    @mock.patch('airflow.operators.docker_operator.Client')
+    @mock.patch('airflow.operators.docker_operator.APIClient')
     def test_execute_unicode_logs(self, client_class_mock):
         client_mock = mock.Mock(spec=Client)
         client_mock.create_container.return_value = {'Id': 'some_id'}
@@ -126,9 +126,9 @@ class DockerOperatorTestCase(unittest.TestCase):
             print_exception_mock.assert_not_called()
 
     @unittest.skipIf(mock is None, 'mock package not present')
-    @mock.patch('airflow.operators.docker_operator.Client')
+    @mock.patch('airflow.operators.docker_operator.APIClient')
     def test_execute_container_fails(self, client_class_mock):
-        client_mock = mock.Mock(spec=Client)
+        client_mock = mock.Mock(spec=APIClient)
         client_mock.create_container.return_value = {'Id': 'some_id'}
         client_mock.create_host_config.return_value = mock.Mock()
         client_mock.images.return_value = []
@@ -145,7 +145,7 @@ class DockerOperatorTestCase(unittest.TestCase):
 
     @unittest.skipIf(mock is None, 'mock package not present')
     def test_on_kill(self):
-        client_mock = mock.Mock(spec=Client)
+        client_mock = mock.Mock(spec=APIClient)
 
         operator = DockerOperator(image='ubuntu', owner='unittest', task_id='unittest')
         operator.cli = client_mock
