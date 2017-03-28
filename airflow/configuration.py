@@ -379,6 +379,9 @@ logging.info("Reading the config from " + AIRFLOW_CONFIG)
 conf = AirflowConfigParser()
 conf.read(AIRFLOW_CONFIG)
 
+if 'AIRFLOW_CONFIG_OVERRIDES' in os.environ:
+    AIRFLOW_CONFIG_OVERRIDES = expand_env_var(os.environ['AIRFLOW_CONFIG_OVERRIDES'])
+    conf.read(AIRFLOW_CONFIG_OVERRIDES)
 
 def load_test_config():
     """
