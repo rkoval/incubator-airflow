@@ -107,13 +107,18 @@ def action_logging(f):
         else:
             user = 'anonymous'
 
+        if request.method == 'POST':
+            extra = str(list(kwargs.items()) + [('payload', request.data)])
+        else:
+            extra = str(list(request.args.items()))
+
         log = models.Log(
             event=f.__name__,
             task_instance=None,
             owner=user,
-            extra=str(list(request.args.items())),
+            extra=extra,
             task_id=request.args.get('task_id'),
-            dag_id=request.args.get('dag_id'))
+            dag_id=request.args.get('dag_id') or kwargs.get('dag_id'))
 
         if 'execution_date' in request.args:
             log.execution_date = dateparser.parse(

@@ -75,6 +75,7 @@ from airflow.utils import logging as log_utils
 from airflow.utils.dates import infer_time_unit, scale_time_units
 from airflow.www import utils as wwwutils
 from airflow.www.forms import DateTimeForm, DateTimeWithNumRunsForm
+from airflow.www.app import csrf
 from airflow.configuration import AirflowConfigException
 
 QUERY_LIMIT = 100000
@@ -1016,6 +1017,38 @@ class Airflow(BaseView):
             "Triggered {}, "
             "it should start any moment now.".format(dag_id))
         return redirect(origin)
+
+    @expose('/trigger/<string:dag_id>', methods=['POST'])
+    @csrf.exempt
+    @login_required
+    @wwwutils.action_logging
+    @wwwutils.notify_owner
+    def trigger_post(self, dag_id):
+        dag = dagbag.get_dag(dag_id)
+
+        if not dag:
+            return Response('Cannot find dag %s' % dag_id, status=400)
+
+        execution_date = datetime.now()
+        run_id = "manual__{0}".format(execution_date.isoformat())
+
+        dr = DagRun.find(dag_id=dag_id, run_id=run_id)
+        if dr:
+            return Response('This run_id %s already exists' % run_id, status=400)
+
+        run_conf = {
+            'payload': request.data
+        }
+
+        dag.create_dagrun(
+            run_id=run_id,
+            execution_date=execution_date,
+            state=State.RUNNING,
+            conf=run_conf,
+            external_trigger=True
+        )
+
+        return Response('Triggered %s, it should start any moment now' % dag_id)
 
     @expose('/clear')
     @login_required
